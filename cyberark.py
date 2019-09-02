@@ -38,6 +38,7 @@ request_id = 12
 client_id = 13
 
 user_stores = []
+to_skip = []
 user_retrieves = []
 retrieve_store_password = []
 store_present=False
@@ -54,35 +55,46 @@ with open(csvFile) as csvfile:
     #readCSV = csv.reader(csvfile, delimiter=',')
     readCSV = csv.reader(x.replace('\0', '') for x in csvfile)
 
-    for i in readCSV:
-        #readCSV.seek(0)
-        i[action]
+    for i in readCSV and i[line_number] not in to_skip:
+
+        #first we want to find all the stores that a user committed
         if[i[action].lower().replace(" ","")=="storepassword"]:
             if[i[user].lower().replace(" ","")!="passwordmanager"]
             user_stores.append(i)
-        else:
-            pass
 
-        with open(csvFile) as csvfile1:
-            readCSV2 = csv.reader(x.replace('\0', '') for x in csvfile1)
-            store_present=False
-            user_retrieves.clear()
-            for j in readCSV2:
-                if(i[target].lower().replace(" ","")==j[target].lower().replace(" ","")):
-                    if[i[action].lower().replace(" ","")=="storepassword"]:
-                        #do something
-                        store_present=True
-                        break;
+        #if the action is a retireve search the file for its equivant store action on the same target
+        elif[i[action].lower().replace(" ","")=="retrievepassword"]:
+            with open(csvFile) as csvfile1:
+                readCSV2 = csv.reader(x.replace('\0', '') for x in csvfile1)
+                store_present=False
+                user_retrieves.clear()
+                for j in readCSV2 and j[line_number] not in to_skip:
 
-                    elif[i[action].lower().replace(" ","")=="retrievepassword"] and j[user] not in user_retrieves:
-                        user_retrieves.append(j[user])
+                    #if we find the same target as the retireve and if there is a store break the inner loop
+                    #and append the result to the list which will be written to an excel file
 
+                    if(i[target].lower().replace(" ","")==j[target].lower().replace(" ","")):
+
+                        to_skip.append[i[line_number]]
+                        if[i[action].lower().replace(" ","")=="storepassword"]:
+                            #do something
+                            store_present=True
+                            break;
+
+                        elif[i[action].lower().replace(" ","")=="retrievepassword"] and j[user] not in user_retrieves:
+                            user_retrieves.append(j[user])
+
+                        else:
+                            pass
                     else:
                         pass
-            if(store_present==True):
-                retrieve_store_password.append[[i[time],i[user],i[action],i[safe],i[target],i[target_platform],i[target_system],i[target_account],i[new_target],i[reason]
-                i[alert],i[request_id],i[client_id],j[time],j[user],j[action],j[safe],j[target],j[target_platform],j[target_system],j[target_account],j[new_target],j[reason]
-                j[alert],j[request_id],j[client_id],user_retrieves]]
-            else:
-                retrieve_store_password.append[[i[time],i[user],i[action],i[safe],i[target],i[target_platform],i[target_system],i[target_account],i[new_target],i[reason]
-                i[alert],i[request_id],i[client_id],user_retrieves]]
+
+                if(store_present==True):
+                    retrieve_store_password.append[[i[time],i[user],i[action],i[safe],i[target],i[target_platform],i[target_system],i[target_account],i[new_target],i[reason]
+                    i[alert],i[request_id],i[client_id],j[time],j[user],j[action],j[safe],j[target],j[target_platform],j[target_system],j[target_account],j[new_target],j[reason]
+                    j[alert],j[request_id],j[client_id],user_retrieves,"Store Present"]]
+                else:
+                    retrieve_store_password.append[[i[time],i[user],i[action],i[safe],i[target],i[target_platform],i[target_system],i[target_account],i[new_target],i[reason]
+                    i[alert],i[request_id],i[client_id],user_retrieves,"No Store"]]
+        else:
+            pass
