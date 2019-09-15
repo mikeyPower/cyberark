@@ -55,57 +55,81 @@ with open(csvFile) as csvfile:
     #readCSV = csv.reader(csvfile, delimiter=',')
     readCSV = csv.reader(x.replace('\0', '') for x in csvfile)
 
+    #skip header row
+    readCSV.next()
     for i in readCSV:
         #we want to skip any lines we have already come accross
-        if i[line_number] not in to_skip:
+        if(i[line_number] not in to_skip):
 
             #first we want to find all the stores that a user committed
-            if[i[action].lower().replace(" ","")=="storepassword"]:
-                if[i[user].lower().replace(" ","")!="passwordmanager"]:
-                    user_stores.append(i)
+            if(i[action].lower().replace(" ","")=="storepassword"):
+                print("action", i[action])
+                if(i[user].lower().replace(" ","")!="passwordmanager"):
+                    user_stores.append(i[user])
+                    print("user found", i[user])
 
                     #if the action is a retireve search the file for its equivant store action on the same target
-                elif[i[action].lower().replace(" ","")=="retrievepassword"]:
-                    with open(csvFile) as csvfile1:
-                        readCSV2 = csv.reader(x.replace('\0', '') for x in csvfile1)
-                        store_present=False
-                        user_retrieves.clear()
-                        for j in readCSV2 and j[line_number] not in to_skip:
+            if(i[action].lower().replace(" ","")=="retrievepassword"):
+                #print("action1", i[action])
+                with open(csvFile) as csvfile1:
+                    readCSV2 = csv.reader(x.replace('\0', '') for x in csvfile1)
+                    #skip header row
+                    readCSV2.next()
+
+                    #reset these variables
+                    store_present=False
+                    del user_retrieves[:]
+
+                    to_skip.append(i[line_number])
+                    for j in readCSV2:
+                        if(j[line_number] not in to_skip):
 
                             #if we find the same target as the retireve and if there is a store break the inner loop
                             #and append the result to the list which will be written to an excel file
 
                             if(i[target].lower().replace(" ","")==j[target].lower().replace(" ","")):
 
-                                to_skip.append[i[line_number]]
-                                if[i[action].lower().replace(" ","")=="storepassword"]:
+                                to_skip.append(j[line_number])
+                                if(j[action].lower().replace(" ","")=="storepassword"):
                                     #do something
                                     store_present=True
+                                    print(j[action])
                                     break;
 
-                                #if a password retreive found and different user to the ones we've found already append the new user to the list
-                                elif[i[action].lower().replace(" ","")=="retrievepassword"] and j[user] not in user_retrieves:
+                                    #if a password retreive found and different user to the ones we've found already append the new user to the list
+                                elif(j[action].lower().replace(" ","")=="retrievepassword" and j[user] not in user_retrieves):
                                     user_retrieves.append(j[user])
 
-                                #skip everything that is not a store or retreive password action
+                                    #skip everything that is not a store or retreive password action
                                 else:
                                     pass
-                            #if different target the target found in outer loop skip until we find the identical target
+                                    #if different target the target found in outer loop skip until we find the identical target
                             else:
                                 pass
-
-                        #if a store is found for the coressponding retreive we want to store the result indicating just that
-                        #else indicate we have gone through the entire file and no store found
-                        if(store_present==True):
-                            retrieve_store_password.append[[i[time_of_event],i[user],i[action],i[safe],i[target],i[target_platform],i[target_system],i[target_account],i[new_target],i[reason],
-                            i[alert],i[request_id],i[client_id],j[time_of_event],j[user],j[action],j[safe],j[target],j[target_platform],j[target_system],j[target_account],j[new_target],j[reason],
-                            j[alert],j[request_id],j[client_id],user_retrieves,"Store Present"]]
                         else:
-                            retrieve_store_password.append[[i[time_of_event],i[user],i[action],i[safe],i[target],i[target_platform],i[target_system],i[target_account],i[new_target],i[reason],
-                            i[alert],i[request_id],i[client_id],user_retrieves,"No Store"]]
-                #skip everything that is not a store or retreive password action
-                else:
-                    pass
+                            pass
+                                #if a store is found for the coressponding retreive we want to store the result indicating just that
+                                #else indicate we have gone through the entire file and no store found
+
+                    if(store_present==True):
+                        retrieve_store_password.append([i[time_of_event],i[user],i[action],i[safe],i[target],i[target_platform],i[target_system],i[target_account],i[new_target],i[reason],
+                        i[alert],i[request_id],i[client_id],j[time_of_event],j[user],j[action],j[safe],j[target],j[target_platform],j[target_system],j[target_account],j[new_target],j[reason],
+                        j[alert],j[request_id],j[client_id],user_retrieves,"Store Present"])
+                    else:
+                        retrieve_store_password.append([i[time_of_event],i[user],i[action],i[safe],i[target],i[target_platform],i[target_system],i[target_account],i[new_target],i[reason],
+                        i[alert],i[request_id],i[client_id],user_retrieves,"No Store"])
+                csvfile1.close()
+
+
         #go to next interation of most outer loop
         else:
             pass
+csvfile.close()
+
+#write the result to a csv file
+with open('results.csv', 'w') as o:
+    writer = csv.writer(o, delimiter=',')
+    for row in retrieve_store_password:
+        #print(row)
+        writer.writerow(row)
+o.close()
