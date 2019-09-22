@@ -79,7 +79,7 @@ with open(csvFile) as csvfile:
                     #reset these variables
                     store_present=False
                     del user_retrieves[:]
-
+                    #ruser_retrieves.clear()
                     to_skip.append(i[line_number])
                     for j in readCSV2:
                         if(j[line_number] not in to_skip):
@@ -93,11 +93,12 @@ with open(csvFile) as csvfile:
                                 if(j[action].lower().replace(" ","")=="storepassword"):
                                     #do something
                                     store_present=True
-                                    print(j[action])
+
                                     break;
 
                                     #if a password retreive found and different user to the ones we've found already append the new user to the list
                                 elif(j[action].lower().replace(" ","")=="retrievepassword" and j[user] not in user_retrieves):
+                                    print(user_retrieves)
                                     user_retrieves.append(j[user])
 
                                     #skip everything that is not a store or retreive password action
@@ -108,24 +109,32 @@ with open(csvFile) as csvfile:
                                 pass
                         else:
                             pass
-                                #if a store is found for the coressponding retreive we want to store the result indicating just that
-                                #else indicate we have gone through the entire file and no store found
 
-                    if(store_present==True):
-                        #calculate the time difference between the retrieve and store of the password
-                        end_date = j[time_of_event].split(" ")[0]
-                        end_time = j[time_of_event].split(" ")[1]
-                        start_date = i[time_of_event].split(" ")[0]
-                        start_time = i[time_of_event].split(" ")[1]
-                        time_dif = str(datetime(int(end_date.split("/")[2]),int(end_date.split("/")[1]),int(end_date.split("/")[0]))-datetime(int(start_date.split("/")[2]),
-                        int(start_date.split("/")[1]),int(start_date.split("/")[0])))
-                        
-                        retrieve_store_password.append([i[time_of_event],i[user],i[action],i[safe],i[target],i[target_platform],i[target_system],i[target_account],i[new_target],i[reason],
-                        i[alert],i[request_id],i[client_id],j[time_of_event],j[user],j[action],j[safe],j[target],j[target_platform],j[target_system],j[target_account],j[new_target],j[reason],
-                        j[alert],j[request_id],j[client_id],user_retrieves,time_dif,"Store Present"])
-                    else:
-                        retrieve_store_password.append([i[time_of_event],i[user],i[action],i[safe],i[target],i[target_platform],i[target_system],i[target_account],i[new_target],i[reason],
-                        i[alert],i[request_id],i[client_id],user_retrieves,"No Store"])
+                    #if a store is found for the coressponding retreive we want to store the result indicating just that
+                    #else indicate we have gone through the entire file and no store found
+                    print(user_retrieves)
+                    with open('results'+now+'.csv', 'a') as o:
+                        writer = csv.writer(o, delimiter=',')
+                        if(store_present==True):
+                            #calculate the time difference between the retrieve and store of the password
+                            end_date = j[time_of_event].split(" ")[0]
+                            end_time = j[time_of_event].split(" ")[1]
+                            start_date = i[time_of_event].split(" ")[0]
+                            start_time = i[time_of_event].split(" ")[1]
+
+                            time_dif = str(datetime(int(end_date.split("/")[2]),int(end_date.split("/")[1]),int(end_date.split("/")[0]))-datetime(int(start_date.split("/")[2]),
+                            int(start_date.split("/")[1]),int(start_date.split("/")[0])))
+
+                            writer.writerow([i[time_of_event],i[user],i[action],i[safe],i[target],i[target_platform],i[target_system],i[target_account],i[new_target],i[reason],
+                            i[alert],i[request_id],i[client_id],j[time_of_event],j[user],j[action],j[safe],j[target],j[target_platform],j[target_system],j[target_account],j[new_target],j[reason],
+                            j[alert],j[request_id],j[client_id],user_retrieves,time_dif,"Store Present"])
+                            #print(retrieve_store_password)
+                        else:
+
+                            writer.writerow([i[time_of_event],i[user],i[action],i[safe],i[target],i[target_platform],i[target_system],i[target_account],i[new_target],i[reason],
+                            i[alert],i[request_id],i[client_id],user_retrieves,"No Store"])
+                            #print(retrieve_store_password)
+                    o.close()
                 csvfile1.close()
 
 
@@ -133,11 +142,3 @@ with open(csvFile) as csvfile:
         else:
             pass
 csvfile.close()
-
-#write the result to a csv file
-with open('results.csv', 'w') as o:
-    writer = csv.writer(o, delimiter=',')
-    for row in retrieve_store_password:
-        #print(row)
-        writer.writerow(row)
-o.close()
