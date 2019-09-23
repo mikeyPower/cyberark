@@ -138,14 +138,16 @@ def find_stores(readCSV,readCSV2):
                     writer = csv.writer(o, delimiter=',')
                     if(store_present==True):
                         #calculate the time difference between the retrieve and store of the password
-                        end_date = j[time_of_event].split(" ")[0]
-                        end_time = j[time_of_event].split(" ")[1]
-                        start_date = i[time_of_event].split(" ")[0]
-                        start_time = i[time_of_event].split(" ")[1]
+                        #end_date = j[time_of_event].split(" ")[0]
+                        #end_time = j[time_of_event].split(" ")[1]
+                        #start_date = i[time_of_event].split(" ")[0]
+                        #start_time = i[time_of_event].split(" ")[1]
 
-                        time_dif = str(datetime(int(end_date.split("/")[2]),int(end_date.split("/")[1]),int(end_date.split("/")[0]))-datetime(int(start_date.split("/")[2]),
-                        int(start_date.split("/")[1]),int(start_date.split("/")[0])))
-
+                        #time_dif = str(datetime(int(end_date.split("/")[2]),int(end_date.split("/")[1]),int(end_date.split("/")[0]))-datetime(int(start_date.split("/")[2]),
+                        #int(start_date.split("/")[1]),int(start_date.split("/")[0])))
+                        
+                        time_dif = j[time_of_event]-i[time_of_event]
+ 
                         writer.writerow([i[time_of_event],i[user],i[action],i[safe],i[target],i[target_platform],i[target_system],i[target_account],i[new_target],i[reason],
                         i[alert],i[request_id],i[client_id],j[time_of_event],j[user],j[action],j[safe],j[target],j[target_platform],j[target_system],j[target_account],j[new_target],j[reason],
                         j[alert],j[request_id],j[client_id],user_retrieves,time_dif,"Store Present"])
