@@ -57,6 +57,8 @@ csv.field_size_limit(sys.maxsize)
 #first sheet will be all users who stored a password
 #second sheet will contain the analyse of the password retrieves and stores
 #after the file has been sorted by dates add a column that will be the index
+#also the point in the code where i'm storing different user who retrieve the password
+#might do this as a dictionary by also counting the number of times someone has retrieved the password
 #
 #
 def see(csvFile):
