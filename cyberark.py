@@ -41,7 +41,10 @@ client_id = 13
 user_stores = []
 to_skip = []
 user_retrieves = []
+user_retrieves_dict = {}
+
 retrieve_store_password = []
+
 store_present=False
 
 #Get timestamp of programme execution
@@ -52,15 +55,7 @@ csvFile = sys.argv[1]
 
 csv.field_size_limit(sys.maxsize)
 #
-#
-#Need to be able to handle an excel file (Use pandas library)
-#that includes writing to seperate sheets
-#first sheet will be all users who stored a password
-#second sheet will contain the analyse of the password retrieves and stores
 #after the file has been sorted by dates add a column that will be the index
-#also the point in the code where i'm storing different user who retrieve the password
-#might do this as a dictionary by also counting the number of times someone has retrieved the password
-#and also the total number of password retrievals
 #
 def excel_to_list(files):
    # xl = pd.ExcelFile(files)
@@ -96,15 +91,15 @@ def find_stores(readCSV,readCSV2):
             if(i[action].lower().replace(" ","")=="storepassword"):
 
                 if(i[user].lower().replace(" ","")!="passwordmanager"):
-                    user_stores.append(i[user])
-                    print("user found", i[user])
+                    user_stores.append(i)
+
 
             #if the action is a retireve search the file for its equivant store action on the same target
             if(i[action].lower().replace(" ","")=="retrievepassword"):
                 #reset these variable
                 store_present=False
-                del user_retrieves[:]
-
+                user_retrieves_dict.clear()
+                user_retrieves_dict[i[user]]=1
                 to_skip.append(i[line_number])
                 for j in readCSV2:
                     if(j[line_number] not in to_skip):
@@ -118,9 +113,12 @@ def find_stores(readCSV,readCSV2):
                                 break;
 
                                 #if a password retreive found and different user to the ones we've found already append the new user to the list
-                            elif(j[action].lower().replace(" ","")=="retrievepassword" and j[user] not in user_retrieves):
-                                print(user_retrieves)
-                                user_retrieves.append(j[user])
+                            elif(j[action].lower().replace(" ","")=="retrievepassword"):
+
+                                if(j[user] not in user_retrieves):
+                                    user_retrieves_dict[j[user]]=1
+                                else:
+                                    user_retrieves_dict[j[user]]=1+user_retrieves_dict[j[user]]
 
                             #skip everything that is not a store or retreive password action
                             else:
@@ -133,7 +131,7 @@ def find_stores(readCSV,readCSV2):
 
                 #if a store is found for the coressponding retreive we want to store the result indicating just that
                 #else indicate we have gone through the entire file and no store found
-                print(user_retrieves)
+
                 with open('results'+now+'.csv', 'a') as o:
                     writer = csv.writer(o, delimiter=',')
                     if(store_present==True):
@@ -145,17 +143,26 @@ def find_stores(readCSV,readCSV2):
 
                         #time_dif = str(datetime(int(end_date.split("/")[2]),int(end_date.split("/")[1]),int(end_date.split("/")[0]))-datetime(int(start_date.split("/")[2]),
                         #int(start_date.split("/")[1]),int(start_date.split("/")[0])))
-                        
+
                         time_dif = j[time_of_event]-i[time_of_event]
- 
+
                         writer.writerow([i[time_of_event],i[user],i[action],i[safe],i[target],i[target_platform],i[target_system],i[target_account],i[new_target],i[reason],
                         i[alert],i[request_id],i[client_id],j[time_of_event],j[user],j[action],j[safe],j[target],j[target_platform],j[target_system],j[target_account],j[new_target],j[reason],
-                        j[alert],j[request_id],j[client_id],user_retrieves,time_dif,"Store Present"])
+                        j[alert],j[request_id],j[client_id],user_retrieves_dict,sum(user_retrieves_dict.values()),len(user_retrieves_dict),time_dif,"Store Present"])
+
+                        retrieve_store_password.append([i[time_of_event],i[user],i[action],i[safe],i[target],i[target_platform],i[target_system],i[target_account],i[new_target],i[reason],
+                        i[alert],i[request_id],i[client_id],j[time_of_event],j[user],j[action],j[safe],j[target],j[target_platform],j[target_system],j[target_account],j[new_target],j[reason],
+                        j[alert],j[request_id],j[client_id],user_retrieves_dict,sum(user_retrieves_dict.values()),len(user_retrieves_dict),time_dif,"Store Present"])
+
 
                     else:
 
                         writer.writerow([i[time_of_event],i[user],i[action],i[safe],i[target],i[target_platform],i[target_system],i[target_account],i[new_target],i[reason],
-                        i[alert],i[request_id],i[client_id],user_retrieves,"No Store"])
+                        i[alert],i[request_id],i[client_id],user_retrieves_dict,sum(user_retrieves_dict.values()),len(user_retrieves_dict),"No Store"])
+
+                        retrieve_store_password.append([i[time_of_event],i[user],i[action],i[safe],i[target],i[target_platform],i[target_system],i[target_account],i[new_target],i[reason],
+                        i[alert],i[request_id],i[client_id],user_retrieves_dict,sum(user_retrieves_dict.values()),len(user_retrieves_dict),"No Store"])
+
 
                 o.close()
 
@@ -164,6 +171,13 @@ def find_stores(readCSV,readCSV2):
         # if in skip go to next interation of most outer loop
         else:
             pass
+
+
+    df1 = pd.DataFrame(user_stores).T
+    df2 = df1.copy()
+    with pd.ExcelWriter('output.xlsx') as writer:  # doctest: +SKIP
+        df1.to_excel(writer, sheet_name='Sheet_name_1')
+        df2.to_excel(writer, sheet_name='Sheet_name_2')
 
 
 
