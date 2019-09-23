@@ -62,9 +62,15 @@ csv.field_size_limit(sys.maxsize)
 #might do this as a dictionary by also counting the number of times someone has retrieved the password
 #and also the total number of password retrievals
 #
-def excel(files):
-    xl = pd.ExcelFile(files)
-    print(xl.sheet_names)
+def excel_to_list(files):
+   # xl = pd.ExcelFile(files)
+   # print(xl.sheet_names)
+    file_name = files # name of your excel file
+    df = pd.read_excel(file_name, sheet_name = 0)
+   # print(df.head()) # shows headers with top 5 rows
+    excel_sheet=df.values.tolist() #return excel sheet as a list
+    return(excel_sheet)
+
 
 def see(csvFile):
     with open(csvFile) as csvfile:
@@ -76,55 +82,41 @@ def see(csvFile):
             datetime.strptime(str(row[1]), '%d/%m/%Y %H:%M')
 
 
-def main(csvFile):
-    with open(csvFile) as csvfile:
-        #readCSV = csv.reader(csvfile, delimiter=',')
-        readCSV = csv.reader(x.replace('\0', '') for x in csvfile)
-        #skip header row
-        readCSV.next()
-        data = sorted(readCSV, key = lambda row: datetime.strptime(row[1], '%d/%m/%Y %H:%M'))
-        print(data)
+def sort_list_by_date(csvFile12):
+   # print(csvFile12)
+    data = sorted(csvFile12, key = lambda row: row[1]) # if i need to convert string datetime to actually date time
+                                                       # datetime.strptime(str(row[1]), '%d/%m/%Y %H:%M:%S'))
+    print(data)
 
 def find_stores():
-    with open(csvFile) as csvfile:
-        #readCSV = csv.reader(csvfile, delimiter=',')
-        readCSV = csv.reader(x.replace('\0', '') for x in csvfile)
+    for i in readCSV:
+        #we want to skip any lines we have already come accross
+        if(i[line_number] not in to_skip):
 
-        #skip header row
-        readCSV.next()
-        for i in readCSV:
-            #we want to skip any lines we have already come accross
-            if(i[line_number] not in to_skip):
+            #first we want to find all the stores that a user committed
+            if(i[action].lower().replace(" ","")=="storepassword"):
 
-                #first we want to find all the stores that a user committed
-                if(i[action].lower().replace(" ","")=="storepassword"):
+                if(i[user].lower().replace(" ","")!="passwordmanager"):
+                    user_stores.append(i[user])
+                    print("user found", i[user])
 
-                    if(i[user].lower().replace(" ","")!="passwordmanager"):
-                        user_stores.append(i[user])
-                        print("user found", i[user])
+            #if the action is a retireve search the file for its equivant store action on the same target
+            if(i[action].lower().replace(" ","")=="retrievepassword"):
 
-                #if the action is a retireve search the file for its equivant store action on the same target
-                if(i[action].lower().replace(" ","")=="retrievepassword"):
-                        #print("action1", i[action])
-                        with open(csvFile) as csvfile1:
-                            readCSV2 = csv.reader(x.replace('\0', '') for x in csvfile1)
-                            #skip header row
-                            readCSV2.next()
+                    #reset these variables
+                    store_present=False
+                    del user_retrieves[:]
+                    #ruser_retrieves.clear()
+                    to_skip.append(i[line_number])
+                    for j in readCSV2:
+                        if(j[line_number] not in to_skip):
 
-                            #reset these variables
-                            store_present=False
-                            del user_retrieves[:]
-                            #ruser_retrieves.clear()
-                            to_skip.append(i[line_number])
-                            for j in readCSV2:
-                                if(j[line_number] not in to_skip):
+                            #if we find the same target as the retireve and if there is a store break the inner loop
+                            #and append the result to the list which will be written to an excel file
 
-                                    #if we find the same target as the retireve and if there is a store break the inner loop
-                                    #and append the result to the list which will be written to an excel file
+                            if(i[target].lower().replace(" ","")==j[target].lower().replace(" ","")):
 
-                                    if(i[target].lower().replace(" ","")==j[target].lower().replace(" ","")):
-
-                                        to_skip.append(j[line_number])
+                                    to_skip.append(j[line_number])
                                         if(j[action].lower().replace(" ","")=="storepassword"):
                                             #do something
                                             store_present=True
@@ -180,4 +172,5 @@ def find_stores():
 
 
 #main(csvFile)
-excel(csvFile)
+a = excel_to_list(csvFile)
+sort_list_by_date(a)
