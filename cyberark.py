@@ -86,13 +86,12 @@ def sort_list_by_date(csvFile12):
    # print(csvFile12)
     data = sorted(csvFile12, key = lambda row: row[1]) # if i need to convert string datetime to actually date time
                                                        # datetime.strptime(str(row[1]), '%d/%m/%Y %H:%M:%S'))
-    print(data)
+    return(data)
 
-def find_stores():
+def find_stores(readCSV,readCSV2):
     for i in readCSV:
         #we want to skip any lines we have already come accross
         if(i[line_number] not in to_skip):
-
             #first we want to find all the stores that a user committed
             if(i[action].lower().replace(" ","")=="storepassword"):
 
@@ -102,75 +101,71 @@ def find_stores():
 
             #if the action is a retireve search the file for its equivant store action on the same target
             if(i[action].lower().replace(" ","")=="retrievepassword"):
+                #reset these variable
+                store_present=False
+                del user_retrieves[:]
 
-                    #reset these variables
-                    store_present=False
-                    del user_retrieves[:]
-                    #ruser_retrieves.clear()
-                    to_skip.append(i[line_number])
-                    for j in readCSV2:
-                        if(j[line_number] not in to_skip):
+                to_skip.append(i[line_number])
+                for j in readCSV2:
+                    if(j[line_number] not in to_skip):
+                        #if we find the same target as the retireve and if there is a store break the inner loop
+                        #and append the result to the list which will be written to an excel file
+                        if(i[target].lower().replace(" ","")==j[target].lower().replace(" ","")):
+                            to_skip.append(j[line_number])
+                            if(j[action].lower().replace(" ","")=="storepassword"):
+                                #do something
+                                store_present=True
+                                break;
 
-                            #if we find the same target as the retireve and if there is a store break the inner loop
-                            #and append the result to the list which will be written to an excel file
+                                #if a password retreive found and different user to the ones we've found already append the new user to the list
+                            elif(j[action].lower().replace(" ","")=="retrievepassword" and j[user] not in user_retrieves):
+                                print(user_retrieves)
+                                user_retrieves.append(j[user])
 
-                            if(i[target].lower().replace(" ","")==j[target].lower().replace(" ","")):
+                            #skip everything that is not a store or retreive password action
+                            else:
+                                pass
+                        #if different target the target found in outer loop skip until we find the identical target
+                        else:
+                            pass
+                    else:
+                        pass
 
-                                    to_skip.append(j[line_number])
-                                        if(j[action].lower().replace(" ","")=="storepassword"):
-                                            #do something
-                                            store_present=True
+                #if a store is found for the coressponding retreive we want to store the result indicating just that
+                #else indicate we have gone through the entire file and no store found
+                print(user_retrieves)
+                with open('results'+now+'.csv', 'a') as o:
+                    writer = csv.writer(o, delimiter=',')
+                    if(store_present==True):
+                        #calculate the time difference between the retrieve and store of the password
+                        end_date = j[time_of_event].split(" ")[0]
+                        end_time = j[time_of_event].split(" ")[1]
+                        start_date = i[time_of_event].split(" ")[0]
+                        start_time = i[time_of_event].split(" ")[1]
 
-                                            break;
+                        time_dif = str(datetime(int(end_date.split("/")[2]),int(end_date.split("/")[1]),int(end_date.split("/")[0]))-datetime(int(start_date.split("/")[2]),
+                        int(start_date.split("/")[1]),int(start_date.split("/")[0])))
 
-                                            #if a password retreive found and different user to the ones we've found already append the new user to the list
-                                        elif(j[action].lower().replace(" ","")=="retrievepassword" and j[user] not in user_retrieves):
-                                            print(user_retrieves)
-                                            user_retrieves.append(j[user])
+                        writer.writerow([i[time_of_event],i[user],i[action],i[safe],i[target],i[target_platform],i[target_system],i[target_account],i[new_target],i[reason],
+                        i[alert],i[request_id],i[client_id],j[time_of_event],j[user],j[action],j[safe],j[target],j[target_platform],j[target_system],j[target_account],j[new_target],j[reason],
+                        j[alert],j[request_id],j[client_id],user_retrieves,time_dif,"Store Present"])
 
-                                            #skip everything that is not a store or retreive password action
-                                        else:
-                                            pass
-                                            #if different target the target found in outer loop skip until we find the identical target
-                                    else:
-                                        pass
-                                else:
-                                    pass
+                    else:
 
-                            #if a store is found for the coressponding retreive we want to store the result indicating just that
-                            #else indicate we have gone through the entire file and no store found
-                            print(user_retrieves)
-                            with open('results'+now+'.csv', 'a') as o:
-                                writer = csv.writer(o, delimiter=',')
-                                if(store_present==True):
-                                    #calculate the time difference between the retrieve and store of the password
-                                    end_date = j[time_of_event].split(" ")[0]
-                                    end_time = j[time_of_event].split(" ")[1]
-                                    start_date = i[time_of_event].split(" ")[0]
-                                    start_time = i[time_of_event].split(" ")[1]
+                        writer.writerow([i[time_of_event],i[user],i[action],i[safe],i[target],i[target_platform],i[target_system],i[target_account],i[new_target],i[reason],
+                        i[alert],i[request_id],i[client_id],user_retrieves,"No Store"])
 
-                                    time_dif = str(datetime(int(end_date.split("/")[2]),int(end_date.split("/")[1]),int(end_date.split("/")[0]))-datetime(int(start_date.split("/")[2]),
-                                    int(start_date.split("/")[1]),int(start_date.split("/")[0])))
-
-                                    writer.writerow([i[time_of_event],i[user],i[action],i[safe],i[target],i[target_platform],i[target_system],i[target_account],i[new_target],i[reason],
-                                    i[alert],i[request_id],i[client_id],j[time_of_event],j[user],j[action],j[safe],j[target],j[target_platform],j[target_system],j[target_account],j[new_target],j[reason],
-                                    j[alert],j[request_id],j[client_id],user_retrieves,time_dif,"Store Present"])
-                                    #print(retrieve_store_password)
-                                else:
-
-                                    writer.writerow([i[time_of_event],i[user],i[action],i[safe],i[target],i[target_platform],i[target_system],i[target_account],i[new_target],i[reason],
-                                    i[alert],i[request_id],i[client_id],user_retrieves,"No Store"])
-                                    #print(retrieve_store_password)
-                            o.close()
-                        csvfile1.close()
+                o.close()
 
 
-            #go to next interation of most outer loop
-            else:
-                pass
-    csvfile.close()
+
+        # if in skip go to next interation of most outer loop
+        else:
+            pass
+
 
 
 #main(csvFile)
 a = excel_to_list(csvFile)
-sort_list_by_date(a)
+b=sort_list_by_date(a)
+find_stores(b,b)
