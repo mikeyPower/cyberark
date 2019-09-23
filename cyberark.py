@@ -20,6 +20,7 @@ import sys
 from datetime import datetime
 import time
 import os
+import pandas as pd
 
 
 line_number = 0
@@ -61,6 +62,10 @@ csv.field_size_limit(sys.maxsize)
 #might do this as a dictionary by also counting the number of times someone has retrieved the password
 #and also the total number of password retrievals
 #
+def excel(files):
+    xl = pd.ExcelFile(files)
+    print(xl.sheet_names)
+
 def see(csvFile):
     with open(csvFile) as csvfile:
         #readCSV = csv.reader(csvfile, delimiter=',')
@@ -174,4 +179,5 @@ def find_stores():
     csvfile.close()
 
 
-main(csvFile)
+#main(csvFile)
+excel(csvFile)
