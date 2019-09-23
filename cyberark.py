@@ -52,13 +52,13 @@ csvFile = sys.argv[1]
 csv.field_size_limit(sys.maxsize)
 #
 #
-#Need to be able to handle an excel file
+#Need to be able to handle an excel file (Use pandas library)
 #that includes writing to seperate sheets
 #first sheet will be all users who stored a password
 #second sheet will contain the analyse of the password retrieves and stores
+#after the file has been sorted by dates add a column that will be the index
 #
 #
-
 def see(csvFile):
     with open(csvFile) as csvfile:
         #readCSV = csv.reader(csvfile, delimiter=',')
