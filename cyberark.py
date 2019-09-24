@@ -23,29 +23,9 @@ import os
 import pandas as pd
 
 
-line_number = 0
-time_of_event = 1
-user = 2
-action = 3
-safe = 4
-target = 5
-target_platform = 6
-target_system = 7
-target_account = 8
-new_target = 9
-reason = 10
-alert = 11
-request_id = 12
-client_id = 13
 
-user_stores = []
-to_skip = []
-user_retrieves = []
-user_retrieves_dict = {}
 
-retrieve_store_password = []
 
-store_present=False
 
 #Get timestamp of programme execution
 now=str(int(time.time()))
@@ -54,17 +34,29 @@ str_now=str(datetime.now())
 csvFile = sys.argv[1]
 
 csv.field_size_limit(sys.maxsize)
-#
-#after the file has been sorted by dates add a column that will be the index
-#
+
+
 def excel_to_list(files):
-   # xl = pd.ExcelFile(files)
-   # print(xl.sheet_names)
+    user_stores=[]
     file_name = files # name of your excel file
     df = pd.read_excel(file_name, sheet_name = 0)
-   # print(df.head()) # shows headers with top 5 rows
+    df1 = pd.read_excel(file_name,sheet_name = 0).columns #print header row
+    user_stores.append(df1.values.tolist())
     excel_sheet=df.values.tolist() #return excel sheet as a list
-    return(excel_sheet)
+    return(excel_sheet,user_stores)
+
+def add_reference_to_list(files):
+    count = 1
+    new_list=[]
+    for row in files:
+        row.insert(0,count)
+        new_list.append(row)
+        count=count+1
+
+
+    return(new_list)
+
+
 
 
 def see(csvFile):
@@ -83,7 +75,31 @@ def sort_list_by_date(csvFile12):
                                                        # datetime.strptime(str(row[1]), '%d/%m/%Y %H:%M:%S'))
     return(data)
 
-def find_stores(readCSV,readCSV2):
+def find_stores(readCSV,readCSV2,user_stores):
+    line_number = 0
+    time_of_event = 1
+    user = 2
+    action = 3
+    safe = 4
+    target = 5
+    target_platform = 6
+    target_system = 7
+    target_account = 8
+    new_target = 9
+    reason = 10
+    alert = 11
+    request_id = 12
+    client_id = 13
+    to_skip = []
+    user_retrieves = []
+    user_retrieves_dict = {}
+
+    retrieve_store_password = []
+    retrieve_store_password.append(["Retrieve Target Account", "Retrieve User", "Retrieve Action","Retrieve Safe"
+    ,"Retrieve Target System","User Retrieves","Total Number Retrieves","Total Retrieves","Store Target Account","Store User"
+    ,"Store Action","Store Time", "Store Safe","Store Target System","Time Difference","Store Present"])
+
+    store_present=False
     for i in readCSV:
         #we want to skip any lines we have already come accross
         if(i[line_number] not in to_skip):
@@ -109,12 +125,13 @@ def find_stores(readCSV,readCSV2):
                             to_skip.append(j[line_number])
                             if(j[action].lower().replace(" ","")=="storepassword"):
                                 #do something
+                                user_stores.append(j)
                                 store_present=True
                                 break;
 
                                 #if a password retreive found and different user to the ones we've found already append the new user to the list
                             elif(j[action].lower().replace(" ","")=="retrievepassword"):
-
+                                #to_skip.append(j[line_number])
                                 if(j[user] not in user_retrieves):
                                     user_retrieves_dict[j[user]]=1
                                 else:
@@ -172,16 +189,26 @@ def find_stores(readCSV,readCSV2):
         else:
             pass
 
+    return(user_stores,retrieve_store_password)
 
-    df1 = pd.DataFrame(user_stores).T
-    df2 = df1.copy()
+
+def write_nested_list_to_excel(user_stores,retrieve_store_password,reference_to_excel):
+    df1 = pd.DataFrame(user_stores)
+    df2 = pd.DataFrame(retrieve_store_password)
+    df3 = pd.DataFrame(reference_to_excel)
+    print(reference_to_excel)
+    # Give a header row for each sheet
     with pd.ExcelWriter('output.xlsx') as writer:  # doctest: +SKIP
-        df1.to_excel(writer, sheet_name='Sheet_name_1')
-        df2.to_excel(writer, sheet_name='Sheet_name_2')
+        df1.to_excel(writer, sheet_name='Sheet_name_1',header=False,index=False)
+        df2.to_excel(writer, sheet_name='Sheet_name_2',header=False,index=False)
+        df3.to_excel(writer, sheet_name='Sheet_name_3',header=False,index=False)
 
 
 
 #main(csvFile)
-a = excel_to_list(csvFile)
+a,user_stores = excel_to_list(csvFile)
 b=sort_list_by_date(a)
-find_stores(b,b)
+c=add_reference_to_list(b)
+user_stores_1,retrieve_store_password=find_stores(c,c,user_stores)
+user_stores[0].insert(0,"Ref")
+write_nested_list_to_excel(user_stores_1,retrieve_store_password,user_stores+c)
