@@ -35,7 +35,10 @@ csvFile = sys.argv[1]
 
 csv.field_size_limit(sys.maxsize)
 
-
+#Parameters: takes a single excel file
+#Returns: two 2d list
+#Method: Takes one excel file and returns both the header
+#        and the data as two seperate lists
 def excel_to_list(files):
     user_stores=[]
     file_name = files # name of your excel file
@@ -45,6 +48,10 @@ def excel_to_list(files):
     excel_sheet=df.values.tolist() #return excel sheet as a list
     return(excel_sheet,user_stores)
 
+#Parameters:2d list
+#Returns: 2d list
+#Method: Takes a single 2d list and adds an incremental value to the start
+#         of each list, as a reference key
 def add_reference_to_list(files):
     count = 1
     new_list=[]
@@ -56,25 +63,16 @@ def add_reference_to_list(files):
 
     return(new_list)
 
-
-
-
-def see(csvFile):
-    with open(csvFile) as csvfile:
-        #readCSV = csv.reader(csvfile, delimiter=',')
-        readCSV = csv.reader(x.replace('\0', '') for x in csvfile)
-        #skip header row
-        readCSV.next()
-        for row in readCSV:
-            datetime.strptime(str(row[1]), '%d/%m/%Y %H:%M')
-
-
+#Parameters: 2d list
+#Returns: 2d list
+#Method: Sorts the list by timestamp
 def sort_list_by_date(csvFile12):
-   # print(csvFile12)
     data = sorted(csvFile12, key = lambda row: row[1]) # if i need to convert string datetime to actually date time
                                                        # datetime.strptime(str(row[1]), '%d/%m/%Y %H:%M:%S'))
     return(data)
 
+#Parameters: three 2d list
+#Returns: two 2d list
 def find_stores(readCSV,readCSV2,user_stores):
     line_number = 0
     time_of_event = 1
@@ -91,7 +89,6 @@ def find_stores(readCSV,readCSV2,user_stores):
     request_id = 12
     client_id = 13
     to_skip = []
-    user_retrieves = []
     user_retrieves_dict = {}
 
     retrieve_store_password = []
@@ -132,7 +129,7 @@ def find_stores(readCSV,readCSV2,user_stores):
                                 #if a password retreive found and different user to the ones we've found already append the new user to the list
                             elif(j[action].lower().replace(" ","")=="retrievepassword"):
                                 #to_skip.append(j[line_number])
-                                if(j[user] not in user_retrieves):
+                                if(j[user] not in user_retrieves_dict):
                                     user_retrieves_dict[j[user]]=1
                                 else:
                                     user_retrieves_dict[j[user]]=1+user_retrieves_dict[j[user]]
@@ -148,40 +145,28 @@ def find_stores(readCSV,readCSV2,user_stores):
 
                 #if a store is found for the coressponding retreive we want to store the result indicating just that
                 #else indicate we have gone through the entire file and no store found
+                if(store_present==True):
+                    #calculate the time difference between the retrieve and store of the password
+                    #end_date = j[time_of_event].split(" ")[0]
+                    #end_time = j[time_of_event].split(" ")[1]
+                    #start_date = i[time_of_event].split(" ")[0]
+                    #start_time = i[time_of_event].split(" ")[1]
 
-                with open('results'+now+'.csv', 'a') as o:
-                    writer = csv.writer(o, delimiter=',')
-                    if(store_present==True):
-                        #calculate the time difference between the retrieve and store of the password
-                        #end_date = j[time_of_event].split(" ")[0]
-                        #end_time = j[time_of_event].split(" ")[1]
-                        #start_date = i[time_of_event].split(" ")[0]
-                        #start_time = i[time_of_event].split(" ")[1]
+                    #time_dif = str(datetime(int(end_date.split("/")[2]),int(end_date.split("/")[1]),int(end_date.split("/")[0]))-datetime(int(start_date.split("/")[2]),
+                    #int(start_date.split("/")[1]),int(start_date.split("/")[0])))
 
-                        #time_dif = str(datetime(int(end_date.split("/")[2]),int(end_date.split("/")[1]),int(end_date.split("/")[0]))-datetime(int(start_date.split("/")[2]),
-                        #int(start_date.split("/")[1]),int(start_date.split("/")[0])))
-
-                        time_dif = j[time_of_event]-i[time_of_event]
-
-                        writer.writerow([i[time_of_event],i[user],i[action],i[safe],i[target],i[target_platform],i[target_system],i[target_account],i[new_target],i[reason],
-                        i[alert],i[request_id],i[client_id],j[time_of_event],j[user],j[action],j[safe],j[target],j[target_platform],j[target_system],j[target_account],j[new_target],j[reason],
-                        j[alert],j[request_id],j[client_id],user_retrieves_dict,sum(user_retrieves_dict.values()),len(user_retrieves_dict),time_dif,"Store Present"])
-
-                        retrieve_store_password.append([i[time_of_event],i[user],i[action],i[safe],i[target],i[target_platform],i[target_system],i[target_account],i[new_target],i[reason],
-                        i[alert],i[request_id],i[client_id],j[time_of_event],j[user],j[action],j[safe],j[target],j[target_platform],j[target_system],j[target_account],j[new_target],j[reason],
-                        j[alert],j[request_id],j[client_id],user_retrieves_dict,sum(user_retrieves_dict.values()),len(user_retrieves_dict),time_dif,"Store Present"])
+                    time_dif = j[time_of_event]-i[time_of_event]
+                    retrieve_store_password.append([i[time_of_event],i[user],i[action],i[safe],i[target],i[target_platform],i[target_system],i[target_account],i[new_target],i[reason],
+                    i[alert],i[request_id],i[client_id],j[time_of_event],j[user],j[action],j[safe],j[target],j[target_platform],j[target_system],j[target_account],j[new_target],j[reason],
+                    j[alert],j[request_id],j[client_id],user_retrieves_dict,sum(user_retrieves_dict.values()),len(user_retrieves_dict),time_dif,"Store Present"])
 
 
-                    else:
-
-                        writer.writerow([i[time_of_event],i[user],i[action],i[safe],i[target],i[target_platform],i[target_system],i[target_account],i[new_target],i[reason],
-                        i[alert],i[request_id],i[client_id],user_retrieves_dict,sum(user_retrieves_dict.values()),len(user_retrieves_dict),"No Store"])
-
-                        retrieve_store_password.append([i[time_of_event],i[user],i[action],i[safe],i[target],i[target_platform],i[target_system],i[target_account],i[new_target],i[reason],
-                        i[alert],i[request_id],i[client_id],user_retrieves_dict,sum(user_retrieves_dict.values()),len(user_retrieves_dict),"No Store"])
+                else:
+                    retrieve_store_password.append([i[time_of_event],i[user],i[action],i[safe],i[target],i[target_platform],i[target_system],i[target_account],i[new_target],i[reason],
+                    i[alert],i[request_id],i[client_id],user_retrieves_dict,sum(user_retrieves_dict.values()),len(user_retrieves_dict),"No Store"])
 
 
-                o.close()
+
 
 
 
@@ -191,12 +176,13 @@ def find_stores(readCSV,readCSV2,user_stores):
 
     return(user_stores,retrieve_store_password)
 
-
+#Parameters: three 2d list
+#Returns: None
+#Method: Writes each 2d list to a seperate sheet in a single excel book
 def write_nested_list_to_excel(user_stores,retrieve_store_password,reference_to_excel):
     df1 = pd.DataFrame(user_stores)
     df2 = pd.DataFrame(retrieve_store_password)
     df3 = pd.DataFrame(reference_to_excel)
-    print(reference_to_excel)
     # Give a header row for each sheet
     with pd.ExcelWriter('output.xlsx') as writer:  # doctest: +SKIP
         df1.to_excel(writer, sheet_name='Sheet_name_1',header=False,index=False)
@@ -205,7 +191,7 @@ def write_nested_list_to_excel(user_stores,retrieve_store_password,reference_to_
 
 
 
-#main(csvFile)
+
 a,user_stores = excel_to_list(csvFile)
 b=sort_list_by_date(a)
 c=add_reference_to_list(b)
