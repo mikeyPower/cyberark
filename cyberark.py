@@ -28,7 +28,6 @@ import pandas as pd
 
 
 #Get timestamp of programme execution
-now=str(int(time.time()))
 str_now=str(datetime.now())
 
 input_file = sys.argv[1]
@@ -98,8 +97,8 @@ def find_stores(two_d_list,user_stores):
     user_retrieves_dict = {}
 
     retrieve_store_password = []
-    retrieve_store_password.append(["Ref Retrieve","Retrieve Target Account", "Retrieve User", "Retrieve Action","Retrieve Safe"
-    ,"Retrieve Target System","User Retrieves","Total Number Retrieves","Total Users","Ref Store","Store Target Account","Store User"
+    retrieve_store_password.append(["Ref Retrieve","Retrieve Time","Retrieve Target Account", "Retrieve User", "Retrieve Action","Retrieve Safe"
+    ,"Retrieve Target System","User Retrieves","Total Number Retrieves","Total Users","Ref Store","Store Time","Store Target Account","Store User"
     ,"Store Action","Store Time", "Store Safe","Store Target System","Time Difference","Store Present"])
 
     store_present=False
@@ -114,7 +113,7 @@ def find_stores(two_d_list,user_stores):
 
 
             #if the action is a retireve search the file for its equivant store action on the same target
-            if(i[action].lower().replace(" ","")=="retrievepassword"):
+            elif(i[action].lower().replace(" ","")=="retrievepassword"):
                 #reset these variable
                 store_present=False
                 user_retrieves_dict.clear()
@@ -140,15 +139,6 @@ def find_stores(two_d_list,user_stores):
                                 else:
                                     user_retrieves_dict[j[user]]=1+user_retrieves_dict[j[user]]
 
-                            #skip everything that is not a store or retreive password action
-                            else:
-                                pass
-                        #if different target the target found in outer loop skip until we find the identical target
-                        else:
-                            pass
-                    else:
-                        pass
-
                 #if a store is found for the coressponding retreive we want to store the result indicating just that
                 #else indicate we have gone through the entire file and no store found
                 if(store_present==True):
@@ -162,23 +152,16 @@ def find_stores(two_d_list,user_stores):
                     #int(start_date.split("/")[1]),int(start_date.split("/")[0])))
 
                     time_dif = j[time_of_event]-i[time_of_event]
-                    retrieve_store_password.append([i[line_number],i[target_account],i[user],i[action],i[safe],i[target],i[target_system],user_retrieves_dict,sum(user_retrieves_dict.values()),
-                    len(user_retrieves_dict),j[line_number],j[target_account],j[user],j[action],j[safe],j[target],j[target_system],
+                    #converted dict to string as strings are inmutables
+                    retrieve_store_password.append([i[line_number],i[time_of_event],i[target_account],i[user],i[action],i[safe],i[target_system],str(user_retrieves_dict),sum(user_retrieves_dict.values()),
+                    len(user_retrieves_dict),j[line_number],j[time_of_event],j[target_account],j[user],j[action],j[time_of_event],j[safe],j[target_system],
                     time_dif,"Store Present"])
 
 
                 else:
-                    retrieve_store_password.append([i[line_number],i[time_of_event],i[user],i[action],i[safe],i[target],i[target_platform],i[target_system],i[target_account],i[new_target],i[reason],
-                    i[alert],i[request_id],i[client_id],user_retrieves_dict,sum(user_retrieves_dict.values()),len(user_retrieves_dict),"-","-","-","-","-","-","-","-","No Store"])
+                    retrieve_store_password.append([i[line_number],i[time_of_event],i[target_account],i[user],i[action],i[safe],i[target_system]
+                    ,str(user_retrieves_dict),sum(user_retrieves_dict.values()),len(user_retrieves_dict),"-","-","-","-","-","-","-","-","-","No Store"])
 
-
-
-
-
-
-        # if in skip go to next interation of most outer loop
-        else:
-            pass
 
     return(user_stores,retrieve_store_password)
 
@@ -195,13 +178,15 @@ def write_nested_list_to_excel(user_stores,retrieve_store_password,reference_to_
         df2.to_excel(writer, sheet_name='Sheet_name_2',header=False,index=False)
         df3.to_excel(writer, sheet_name='Sheet_name_3',header=False,index=False)
 
+#Add execution time
 
-
-
+start=time.time()
 excel_list,user_stores = excel_to_list(input_file)
 header = user_stores[:] #make a copy of the header line as it stands before the user_stores list is affected by passing to functions
-header[0].insert(0,"Ref")
+header[0].insert(0,"Ref") #add an extra column to the header line
 sort_list_by_date(excel_list)#pass by reference
 add_reference_to_list(excel_list)#pas by reference
 user_stores,retrieve_store_password=find_stores(excel_list,user_stores)
 write_nested_list_to_excel(user_stores,retrieve_store_password,header+excel_list)
+finish=time.time()-start
+print("Execution Time: ",finish)
