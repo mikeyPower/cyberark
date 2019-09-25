@@ -31,7 +31,7 @@ import pandas as pd
 now=str(int(time.time()))
 str_now=str(datetime.now())
 
-csvFile = sys.argv[1]
+input_file = sys.argv[1]
 
 csv.field_size_limit(sys.maxsize)
 
@@ -39,23 +39,23 @@ csv.field_size_limit(sys.maxsize)
 #Returns: two 2d list
 #Method: Takes one excel file and returns both the header
 #        and the data as two seperate lists
-def excel_to_list(files):
-    user_stores=[]
-    file_name = files # name of your excel file
-    df = pd.read_excel(file_name, sheet_name = 0)
+def excel_to_list(excel_file):
+    header=[]
+    file_name = excel_file # name of your excel file
+    df = pd.read_excel(file_name,header=0,sheet_name = 0)
     df1 = pd.read_excel(file_name,sheet_name = 0).columns #print header row
-    user_stores.append(df1.values.tolist())
+    header.append(df1.values.tolist())
     excel_sheet=df.values.tolist() #return excel sheet as a list
-    return(excel_sheet,user_stores)
+    return(excel_sheet,header)
 
 #Parameters:2d list
 #Returns: 2d list
 #Method: Takes a single 2d list and adds an incremental value to the start
 #         of each list, as a reference key
-def add_reference_to_list(files):
+def add_reference_to_list(two_d_list):
     count = 1
     new_list=[]
-    for row in files:
+    for row in two_d_list:
         row.insert(0,count)
         new_list.append(row)
         count=count+1
@@ -66,14 +66,20 @@ def add_reference_to_list(files):
 #Parameters: 2d list
 #Returns: 2d list
 #Method: Sorts the list by timestamp
-def sort_list_by_date(csvFile12):
-    data = sorted(csvFile12, key = lambda row: row[1]) # if i need to convert string datetime to actually date time
+def sort_list_by_date(two_d_list):
+    data = sorted(two_d_list, key = lambda row: row[1]) # if i need to convert string datetime to actually date time
                                                        # datetime.strptime(str(row[1]), '%d/%m/%Y %H:%M:%S'))
     return(data)
 
-#Parameters: three 2d list
+#Parameters: two 2d list
 #Returns: two 2d list
-def find_stores(readCSV,readCSV2,user_stores):
+#Method: create two instances of a 2d list to search through
+#        if we find a store will apend that to one of the list we are searching through
+#        once we find a retrieve action, search for the corresponding store taking into
+#        account any other user who tried to retrieve it before the store
+#        if no store found indicate that in the list likewise if a store is found
+def find_stores(two_d_list,user_stores):
+    two_d_list_1=two_d_list[:]
     line_number = 0
     time_of_event = 1
     user = 2
@@ -92,12 +98,12 @@ def find_stores(readCSV,readCSV2,user_stores):
     user_retrieves_dict = {}
 
     retrieve_store_password = []
-    retrieve_store_password.append(["Retrieve Target Account", "Retrieve User", "Retrieve Action","Retrieve Safe"
-    ,"Retrieve Target System","User Retrieves","Total Number Retrieves","Total Retrieves","Store Target Account","Store User"
+    retrieve_store_password.append(["Ref Retrieve","Retrieve Target Account", "Retrieve User", "Retrieve Action","Retrieve Safe"
+    ,"Retrieve Target System","User Retrieves","Total Number Retrieves","Total Users","Ref Store","Store Target Account","Store User"
     ,"Store Action","Store Time", "Store Safe","Store Target System","Time Difference","Store Present"])
 
     store_present=False
-    for i in readCSV:
+    for i in two_d_list:
         #we want to skip any lines we have already come accross
         if(i[line_number] not in to_skip):
             #first we want to find all the stores that a user committed
@@ -114,7 +120,7 @@ def find_stores(readCSV,readCSV2,user_stores):
                 user_retrieves_dict.clear()
                 user_retrieves_dict[i[user]]=1
                 to_skip.append(i[line_number])
-                for j in readCSV2:
+                for j in two_d_list_1:
                     if(j[line_number] not in to_skip):
                         #if we find the same target as the retireve and if there is a store break the inner loop
                         #and append the result to the list which will be written to an excel file
@@ -156,14 +162,14 @@ def find_stores(readCSV,readCSV2,user_stores):
                     #int(start_date.split("/")[1]),int(start_date.split("/")[0])))
 
                     time_dif = j[time_of_event]-i[time_of_event]
-                    retrieve_store_password.append([i[time_of_event],i[user],i[action],i[safe],i[target],i[target_platform],i[target_system],i[target_account],i[new_target],i[reason],
-                    i[alert],i[request_id],i[client_id],j[time_of_event],j[user],j[action],j[safe],j[target],j[target_platform],j[target_system],j[target_account],j[new_target],j[reason],
-                    j[alert],j[request_id],j[client_id],user_retrieves_dict,sum(user_retrieves_dict.values()),len(user_retrieves_dict),time_dif,"Store Present"])
+                    retrieve_store_password.append([i[line_number],i[target_account],i[user],i[action],i[safe],i[target],i[target_system],user_retrieves_dict,sum(user_retrieves_dict.values()),
+                    len(user_retrieves_dict),j[line_number],j[target_account],j[user],j[action],j[safe],j[target],j[target_system],
+                    time_dif,"Store Present"])
 
 
                 else:
-                    retrieve_store_password.append([i[time_of_event],i[user],i[action],i[safe],i[target],i[target_platform],i[target_system],i[target_account],i[new_target],i[reason],
-                    i[alert],i[request_id],i[client_id],user_retrieves_dict,sum(user_retrieves_dict.values()),len(user_retrieves_dict),"No Store"])
+                    retrieve_store_password.append([i[line_number],i[time_of_event],i[user],i[action],i[safe],i[target],i[target_platform],i[target_system],i[target_account],i[new_target],i[reason],
+                    i[alert],i[request_id],i[client_id],user_retrieves_dict,sum(user_retrieves_dict.values()),len(user_retrieves_dict),"-","-","-","-","-","-","-","-","No Store"])
 
 
 
@@ -192,9 +198,10 @@ def write_nested_list_to_excel(user_stores,retrieve_store_password,reference_to_
 
 
 
-a,user_stores = excel_to_list(csvFile)
-b=sort_list_by_date(a)
-c=add_reference_to_list(b)
-user_stores_1,retrieve_store_password=find_stores(c,c,user_stores)
-user_stores[0].insert(0,"Ref")
-write_nested_list_to_excel(user_stores_1,retrieve_store_password,user_stores+c)
+excel_list,user_stores = excel_to_list(input_file)
+header = user_stores[:] #make a copy of the header line as it stands before the user_stores list is affected by passing to functions
+header[0].insert(0,"Ref")
+sort_list_by_date(excel_list)#pass by reference
+add_reference_to_list(excel_list)#pas by reference
+user_stores,retrieve_store_password=find_stores(excel_list,user_stores)
+write_nested_list_to_excel(user_stores,retrieve_store_password,header+excel_list)
