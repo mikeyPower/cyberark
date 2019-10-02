@@ -1,4 +1,5 @@
 # cyberark
+Cyberark is a publicly traded information security company offering Privileged Account Security, one such aplication that Cyberark offer is in the form of a password vault. The code in this repo demonstrates how to analyse the logs of this password vault.
 
 ## Prerequisite
 python 3.7.0
