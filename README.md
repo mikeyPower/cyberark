@@ -16,5 +16,9 @@ Or run the following shell script
 | ----- | ---- | ------ | ---- | ------ | --------------- | ------------- | -------------- | ---------- | ------ | ----- | ---------- | ------------ | 
     
 ## Run
-    python3 cyberark.py <input-file.xlsx>
+    python3 cyberark.py log1.xlsx
+    lenght of log1.xlsx:  11
+    Outputed File:  output1588944091.xlsx
+    Execution Time:  0.958949089050293
+    
     
