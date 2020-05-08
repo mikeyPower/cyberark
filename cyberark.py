@@ -61,7 +61,8 @@ def add_reference_to_list(two_d_list):
 #Returns: 2d list
 #Method: Sorts the list by timestamp
 def sort_list_by_date(two_d_list):
-    data = sorted(two_d_list, key = lambda row: row[1])
+    data = sorted(two_d_list, key = lambda row: row[0])
+    print(data)
     return(data)
 
 #Parameters: two 2d list
@@ -94,7 +95,7 @@ def find_stores(two_d_list,user_stores):
     retrieve_store_password = []
     retrieve_store_password.append(["Ref Retrieve","Retrieve Time","Retrieve Target Account", "Retrieve User", "Retrieve Action","Retrieve Safe"
     ,"Retrieve Target System","User Retrieves","Total Number Retrieves","Total Users","Ref Store","Store Time","Store Target Account","Store User"
-    ,"Store Action","Store Time", "Store Safe","Store Target System","Time Difference","Store Present"])
+    ,"Store Action", "Store Safe","Store Target System","Time Difference","Store Present"])
     store_present=False
     #Used as reference point to skip to +i of the inner for loop
     count = 0
@@ -139,7 +140,7 @@ def find_stores(two_d_list,user_stores):
                     time_dif = j[time_of_event]-i[time_of_event]
                     #converted dict to string as strings are inmutables
                     retrieve_store_password.append([i[line_number],i[time_of_event],i[target_account],i[user],i[action],i[safe],i[target_system],str(user_retrieves_dict),sum(user_retrieves_dict.values()),
-                    len(user_retrieves_dict),j[line_number],j[time_of_event],j[target_account],j[user],j[action],j[time_of_event],j[safe],j[target_system],
+                    len(user_retrieves_dict),j[line_number],j[time_of_event],j[target_account],j[user],j[action],j[safe],j[target_system],
                     time_dif,"Store Present"])
                 else:
                     retrieve_store_password.append([i[line_number],i[time_of_event],i[target_account],i[user],i[action],i[safe],i[target_system]
@@ -168,11 +169,12 @@ excel_list,user_stores = excel_to_list(input_file)
 header = user_stores[:]
 #add an extra column to the header line
 header[0].insert(0,"Ref")
-#pass by reference so no need to return anything
-sort_list_by_date(excel_list)
-add_reference_to_list(excel_list)
-user_stores,retrieve_store_password=find_stores(excel_list,user_stores)
-write_nested_list_to_excel(user_stores,retrieve_store_password,header+excel_list)
+#sort list
+sorted_list = sort_list_by_date(excel_list)
+#add ref column to list
+ref_list =add_reference_to_list(sorted_list)
+user_stores,retrieve_store_password=find_stores(ref_list,user_stores)
+write_nested_list_to_excel(user_stores,retrieve_store_password,header+ref_list)
 finish=time.time()-start
 print("lenght of "+input_file+": ",len(excel_list)+1)
 print("Outputed File: ",'output'+now+'.xlsx')
