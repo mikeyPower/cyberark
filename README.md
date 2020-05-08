@@ -16,9 +16,17 @@ Or run the following shell script
 | ----- | ---- | ------ | ---- | ------ | --------------- | ------------- | -------------- | ---------- | ------ | ----- | ---------- | ------------ | 
     
 ## Run
-    python3 cyberark.py log1.xlsx
+    $ python3 cyberark.py log1.xlsx
     lenght of log1.xlsx:  11
     Outputed File:  output1588944091.xlsx
     Execution Time:  0.958949089050293
+    
+## Output file
+
+The output file is an excel file with 3 tabs:
+    1. User Stores: Is a tab that contains all the users that stored a password excluding those of Password Manager
+    2. Retrieves: This tab contains information regarding all the passwords that were taken out and if there was an equivalent store
+       action for that password taking into account of any other user who took the password out while a store had not occured
+    3. Ref Safe: This tab is used to reference our findings for the above two tabs discussed previously
     
     
