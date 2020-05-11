@@ -24,9 +24,13 @@ Or run the following shell script
 ## Output file
 
 The output file is an excel file with 3 tabs:<br/>
+
     1. User Stores: Is a tab that contains all the users that stored a password excluding those of Password Manager<br/>
+    
     2. Retrieves: This tab contains information regarding all the passwords that were taken out and if there was an equivalent      store<br/>
+    
        action for that password taking into account of any other user who took the password out while a store had not occured<br/>
-    3. Ref Safe: This tab is used to reference our findings for the above two tabs discussed previously
+       
+    3. Ref Safe: This tab is the original input file after it has been sorted used in order to reference our findings for the above two tabs discussed previously
     
     
